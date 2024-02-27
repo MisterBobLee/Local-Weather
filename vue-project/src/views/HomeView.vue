@@ -19,7 +19,7 @@
         <CityList />
         <template #fallback>
           <div v-if="cities !== null">
-            <div v-for="i in cities.length">
+            <div v-for="i in cities.length" class="mb-2">
               <CityCardSkeleton />
             </div>
           </div>
