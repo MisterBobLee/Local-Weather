@@ -18,12 +18,9 @@
       <Suspense>
         <CityList />
         <template #fallback>
-          <div>
+          <div v-for="i in cities.length">
             <CityCardSkeleton />
             <p class="text-6xl flex flex-col items-center w-full animate-pulse">
-              <div>.</div>
-              <div>.</div>
-              <div>.</div>
             </p>
           </div>
         </template>
@@ -76,4 +73,12 @@ const getSearchResults = () => {
     mapboxSearchResults.value = null
   }, 300)
 }
+
+let cities = null
+
+function skeletonList() {
+  cities = JSON.parse(localStorage.getItem("savedCities"))
+}
+skeletonList()
+
 </script>
