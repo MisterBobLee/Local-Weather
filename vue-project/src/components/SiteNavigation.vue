@@ -10,7 +10,7 @@
 
             <div class="flex gap-6 flex-1 justify-end">
                 <span class="text-3xl hover:text-weather-secondary duration-300 cursor-pointer" @click="toggleModal">&#8505;</span>
-                <span class="text-3xl hover:text-weather-secondary duration-300 cursor-pointer" @click="addCity" v-if="route.query.preview">&#43;</span>
+                <span class="text-3xl hover:text-weather-secondary duration-300 cursor-pointer" @click="addCity" v-if="route.query.preview === 'true'">&#43;</span>
             </div>
             <BaseModal :modalActive="modalActive" @close-modal="toggleModal">
                 <div class="text-black">
@@ -73,6 +73,7 @@ const addCity = () => {
     query.id = locationObj.id
     router.replace({ query })
     console.log(savedCities.value.length)
+    console.log(typeof route.query.preview)
 }
 
 const modalActive = ref(null)

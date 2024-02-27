@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col flex-1 items-center">
         <!-- banner -->
-        <div v-if="route.query.preview" class="text-white p-4 bg-weather-secondary w-full text-center">
+        <div v-if="route.query.preview === 'true'" class="text-white p-4 bg-weather-secondary w-full text-center">
             <p>如果想要追蹤這座城市，請按下右上角的"+"。</p>
         </div>
         <!-- weather overview -->

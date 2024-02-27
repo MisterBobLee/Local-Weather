@@ -18,10 +18,10 @@
       <Suspense>
         <CityList />
         <template #fallback>
-          <div v-for="i in cities.length">
-            <CityCardSkeleton />
-            <p class="text-6xl flex flex-col items-center w-full animate-pulse">
-            </p>
+          <div v-if="cities !== null">
+            <div v-for="i in cities.length">
+              <CityCardSkeleton />
+            </div>
           </div>
         </template>
       </Suspense>
@@ -36,20 +36,42 @@ import { useRouter } from 'vue-router';
 import CityList from '@/components/CityList.vue';
 import CityCardSkeleton from '@/components/CityCardSkeleton.vue';
 
+var cities = null
+
+function skeletonList() {
+  cities = JSON.parse(localStorage.getItem("savedCities"))
+}
+skeletonList()
+
 const router = useRouter()
 
 const previewCity = (searchResult) => {
-  console.log(searchResult)
   const [city, state] = searchResult.place_name.split(',')
+  let citiesExist = true
+  if (cities !== null) {
+    const citiesIter = cities.values()
+
+    for (let i = 0; i < cities.length; i++) {
+      const citiesInLocal = citiesIter.next().value.city
+      if (searchResult.text !== citiesInLocal) {
+        citiesExist = true
+      } else {  
+        citiesExist = false
+        break
+      }
+    }
+  }
+
   router.push({
     name: 'cityView',
     params: { state: state.replaceAll(" ", ""), city: city },
     query: {
       lat: searchResult.geometry.coordinates[1],
       lng: searchResult.geometry.coordinates[0],
-      preview: true
+      preview: citiesExist
     }
   })
+
 }
 
 const mapboxAPIKey = 'pk.eyJ1IjoiYXNkbGVlbXJib2JsZWU1MjAyIiwiYSI6ImNsc3ZocnJnajJoZ2UycXRnem4yd25wbmcifQ.F-rB8tjl8sSwJEJxOMm7jQ'
@@ -74,11 +96,5 @@ const getSearchResults = () => {
   }, 300)
 }
 
-let cities = null
-
-function skeletonList() {
-  cities = JSON.parse(localStorage.getItem("savedCities"))
-}
-skeletonList()
 
 </script>
