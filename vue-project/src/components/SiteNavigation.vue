@@ -7,34 +7,33 @@
                     <p class="text-2xl">當地天氣</p>
                 </div>
             </RouterLink>
-
             <div class="flex gap-6 flex-1 justify-end">
-                <span class="text-3xl hover:text-weather-secondary duration-300 cursor-pointer" @click="toggleModal">&#8505;</span>
-                <span class="text-3xl hover:text-weather-secondary duration-300 cursor-pointer" @click="addCity" v-if="route.query.preview === 'true'">&#43;</span>
+                <span class="text-3xl hover:text-weather-secondary duration-300 cursor-pointer"
+                    @click="toggleModal">&#8505;</span>
+                <span class="text-3xl hover:text-weather-secondary duration-300 cursor-pointer" @click="addCity"
+                    v-if="route.query.preview === 'true'">&#43;</span>
             </div>
             <BaseModal :modalActive="modalActive" @close-modal="toggleModal">
                 <div class="text-black">
-                    <h1 class="text-2xl mb-1">About:</h1>
+                    <h1 class="text-2xl mb-1">關於:</h1>
                     <p class="mb-4">
-                        The Local Weather allows you to track the current and
-                        future weather of cities of your choosing.
+                        尋找你要得城市，你會找到當天以及未來的天氣資訊。
                     </p>
-                    <h2 class="text-2xl">How it works:</h2>
+                    <h2 class="text-2xl">如何操作:</h2>
                     <ol class="list-decimal list-outside mb-4 mx-8">
                         <li>
-                            Search for your city by entering the name into the search bar.
+                            在搜尋欄尋找你要的城市。
                         </li>
                         <li>
-                            Select a city within the results, this will take you to the current weather for your selection.
+                            選擇你在搜尋欄想要查看的城市。
                         </li>
                         <li>
-                            Track the city by clicking on the "+" icon in the top right. This will save the city to view at a later time on the home page.
+                            如果想要追蹤城市資訊的話，請點擊左上角的"+"。
                         </li>
                     </ol>
-
                     <h2 class="text-2xl">Removing a city</h2>
                     <p>
-                        If you no longer wish to track a city, simply select the city within the home page. At the bottom of the page, there will be am option to delete the city.
+                        如果你想要移除已追蹤的城市，點選城市，並畫到頁面最下方，點擊"移除城市"。
                     </p>
                 </div>
             </BaseModal>
@@ -52,7 +51,7 @@ const savedCities = ref([])
 const route = useRoute()
 const router = useRouter()
 const addCity = () => {
-    if(localStorage.getItem('savedCities')){
+    if (localStorage.getItem('savedCities')) {
         savedCities.value = JSON.parse(localStorage.getItem("savedCities"))
     }
 
@@ -72,8 +71,6 @@ const addCity = () => {
     delete query.preview
     query.id = locationObj.id
     router.replace({ query })
-    console.log(savedCities.value.length)
-    console.log(typeof route.query.preview)
 }
 
 const modalActive = ref(null)

@@ -27,7 +27,7 @@ const getCities = async () => {
         savedCities.value.forEach((city) => {
             request.push(axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${city.coords.lat}&lon=${city.coords.lng}&appid=7efa332cf48aeb9d2d391a51027f1a71&units=metric`))
         })
-
+        
         const weatherData = await Promise.all(request)
 
         await new Promise((res) => setTimeout(res, getRandomAwaitTime()))
