@@ -87,6 +87,7 @@ const getSearchResults = () => {
       try {
         const result = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery.value}.json?access_token=${mapboxAPIKey}&types=place`)
         mapboxSearchResults.value = result.data.features
+        searchError.value = false
       } catch {
         searchError.value = true
       }

@@ -31,18 +31,7 @@
             <div class="text-center text-xl">
                 <p>體感溫度{{ Math.round(weatherData.current.feels_like) }}&deg;</p>
                 <div>
-                    <p v-if="sky === 'clear sky'">晴天</p>
-                    <p v-else-if="sky === 'few clouds'">多雲時晴</p>
-                    <p v-else-if="sky === 'scattered clouds'">多雲</p>
-                    <p v-else-if="sky === 'broken clouds'">多雲時陰</p>
-                    <p v-else-if="sky === 'overcast clouds'">陰天</p>
-                    <p v-else-if="sky === 'light rain'">小雨</p>
-                    <p v-else-if="sky === 'shower rain'">暫雨</p>
-                    <p v-else-if="sky === 'rain'">大雨</p>
-                    <p v-else-if="sky === 'thunderstorm'">雷雨</p>
-                    <p v-else-if="sky === 'snow'">降雪</p>
-                    <p v-else-if="sky === 'mist'">起霧</p>
-                    <P v-else>{{ sky }}</P>
+                    <p>{{ skyMap[sky] || sky }}</p>
                 </div>
                 <img class="w-[150px] h-auto"
                     :src="`https://openweathermap.org/img/wn/${weatherData.current.weather[0].icon}@2x.png`" alt="">
@@ -54,7 +43,7 @@
         <!-- hourly weather -->
         <div class="max-w-screen-md w-full py-12">
             <div class="mx-8 text-white">
-                <h2 class="mb-4 text-2xl font-bold">每小時更新天氣</h2>
+                <h2 class="mb-4 text-2xl font-bold">每3小時更新天氣</h2>
                 <div class="flex gap-8 overflow-x-scroll">
                     <div v-for="hourData in weatherData.hourly" :key="hourData.dt" class="flex flex-col items-center">
                         <p class="whitespace-nowrap py-2">
@@ -74,7 +63,7 @@
                         </p>
                         <img class="w-[50px] h-[75px] object-cover"
                             :src="`https://openweathermap.org/img/wn/${hourData.weather[0].icon}@2x.png`" alt="">
-                        <p class="text-xl pb-4">{{ Math.round(hourData.temp) }}&deg;</p>
+                        <p class="text-xl pb-4">{{ Math.round(hourData.main.temp) }}&deg;</p>
                     </div>
                 </div>
             </div>
@@ -112,41 +101,101 @@
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 
-function getRandomAwaitTime() {
-  return Math.random() * (750) + 250;
+const skyMap = {
+  "clear sky": "晴天",
+  "few clouds": "多雲時晴",
+  "scattered clouds": "多雲",
+  "broken clouds": "多雲時陰",
+  "overcast clouds": "陰天",
+  "light rain": "小雨",
+  "shower rain": "暫雨",
+  "rain": "大雨",
+  "thunderstorm": "雷雨",
+  "snow": "降雪",
+  "mist": "起霧",
 }
 
-const route = useRoute()
+const route = useRoute();
+const router = useRouter();
+
 const getWeatherData = async () => {
-    try {
-        const weatherData = await axios.get(
-            `https://api.openweathermap.org/data/2.5/onecall?lat=${route.query.lat}&lon=${route.query.lng}&exclude={part}&appid=7efa332cf48aeb9d2d391a51027f1a71&units=metric`)
-        const localOffset = new Date().getTimezoneOffset() * 60000
-        const utc = weatherData.data.current.dt * 1000 + localOffset
-        weatherData.data.currentTime = utc + 1000 * weatherData.data.timezone_offset
+  try {
+    const response = await axios.get(
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${route.query.lat}&lon=${route.query.lng}&appid=24d8908d68e1af6e0584b44efabfd8e0&units=metric`
+    );
 
-        weatherData.data.hourly.forEach((hour) => {
-            const utc = hour.dt * 1000 + localOffset
-            hour.currentTime = utc + 1000 * weatherData.data.timezone_offset
-        });
+    const localOffset = new Date().getTimezoneOffset() * 60000;
+    const list = response.data.list.map((item) => {
+      const utc = item.dt * 1000 + localOffset;
+      return {
+        ...item,
+        currentTime: utc + 1000 * response.data.city.timezone,
+      };
+    });
 
-        await new Promise((res) => setTimeout(res, getRandomAwaitTime()))
+    const dailyData = [];
+    const daysMap = {};
 
-        return weatherData.data
-    } catch (err) {
-        console.log(err)
+    list.forEach((item) => {
+      const dateStr = new Date(item.currentTime).toISOString().slice(0, 10);
+      if (!daysMap[dateStr]) {
+        daysMap[dateStr] = {
+          temp_max: item.main.temp_max,
+          temp_min: item.main.temp_min,
+          weather: item.weather[0],
+          count: 1,
+          iconCount: { [item.weather[0].icon]: 1 },
+        };
+      } else {
+        daysMap[dateStr].temp_max = Math.max(daysMap[dateStr].temp_max, item.main.temp_max);
+        daysMap[dateStr].temp_min = Math.min(daysMap[dateStr].temp_min, item.main.temp_min);
+
+        const icon = item.weather[0].icon;
+        daysMap[dateStr].iconCount[icon] = (daysMap[dateStr].iconCount[icon] || 0) + 1;
+        daysMap[dateStr].count++;
+
+        const maxIcon = Object.entries(daysMap[dateStr].iconCount).reduce(
+          (a, b) => (b[1] > a[1] ? b : a),
+          ['', 0]
+        )[0];
+        daysMap[dateStr].weather = { icon: maxIcon };
+      }
+    });
+
+    for (const date in daysMap) {
+      dailyData.push({
+        dt: new Date(date).getTime() / 1000,
+        temp: {
+          max: daysMap[date].temp_max,
+          min: daysMap[date].temp_min,
+        },
+        weather: [daysMap[date].weather],
+      });
     }
-}
-const weatherData = await getWeatherData()
-console.log(weatherData)
 
-const sky = weatherData.current.weather[0].description
+    return {
+      city: response.data.city,
+      currentTime: list[0].currentTime,
+      current: {
+        temp: list[0].main.temp,
+        feels_like: list[0].main.feels_like || list[0].main.temp,
+        weather: list[0].weather,
+      },
+      hourly: list,
+      daily: dailyData,
+    };
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-const router = useRouter()
+const weatherData = await getWeatherData();
+const sky = weatherData.current.weather[0].description;
+
 const removeCity = () => {
-    const cities = JSON.parse(localStorage.getItem('savedCities'))
-    const updatedCities = cities.filter((city) => city.id !== route.query.id)
-    localStorage.setItem('savedCities', JSON.stringify(updatedCities))
-    router.push({name: 'home'})
-}
+  const cities = JSON.parse(localStorage.getItem('savedCities'));
+  const updatedCities = cities.filter((city) => city.id !== route.query.id);
+  localStorage.setItem('savedCities', JSON.stringify(updatedCities));
+  router.push({ name: 'home' });
+};
 </script>
